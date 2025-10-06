@@ -1,0 +1,15 @@
+# Virtual Environment
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# IDE/Editor folders
+.idea/
+.vscode/
+
+# DVC will add your large data files here automatically
+# For example:
+# /data/raw/gender_pay_gap_india.csv
