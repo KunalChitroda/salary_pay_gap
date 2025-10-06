@@ -1,0 +1,78 @@
+schema: '2.0'
+stages:
+  preprocess:
+    cmd: python src/data_preprocessing.py
+    deps:
+    - path: data/raw/gender_pay_gap_india.csv
+      hash: md5
+      md5: 4e4f4215dd5c603883cf96391cd5e552
+      size: 507189
+    - path: src/data_preprocessing.py
+      hash: md5
+      md5: fe3133450a5f6ef8099ab7c79bfc2b88
+      size: 2099
+    outs:
+    - path: data/processed
+      hash: md5
+      md5: 79120a2f7d49c433074ebe54418aef7d.dir
+      size: 994697
+      nfiles: 4
+  tune:
+    cmd: python src/hyperparameter_tuning.py
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: 79120a2f7d49c433074ebe54418aef7d.dir
+      size: 994697
+      nfiles: 4
+    - path: src/hyperparameter_tuning.py
+      hash: md5
+      md5: 421048daf3218083e25c732d1ab69270
+      size: 1753
+    outs:
+    - path: best_params.json
+      hash: md5
+      md5: 718ce21c29fff9c00e6cb6866e953547
+      size: 107
+  train:
+    cmd: python src/model_trainer.py
+    deps:
+    - path: best_params.json
+      hash: md5
+      md5: 718ce21c29fff9c00e6cb6866e953547
+      size: 107
+    - path: data/processed
+      hash: md5
+      md5: 79120a2f7d49c433074ebe54418aef7d.dir
+      size: 994697
+      nfiles: 4
+    - path: src/model_trainer.py
+      hash: md5
+      md5: 84698561a76b40e7de311fe638c2448b
+      size: 1773
+    outs:
+    - path: models/random_forest_model.pkl
+      hash: md5
+      md5: f638c5fd1f731b66ac5ef20d7bb7fb69
+      size: 13730337
+  evaluate:
+    cmd: python src/model_evaluation.py
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: 79120a2f7d49c433074ebe54418aef7d.dir
+      size: 994697
+      nfiles: 4
+    - path: models/random_forest_model.pkl
+      hash: md5
+      md5: f638c5fd1f731b66ac5ef20d7bb7fb69
+      size: 13730337
+    - path: src/model_evaluation.py
+      hash: md5
+      md5: cfc98834ec8282a2a2e57317d5e284ca
+      size: 1683
+    outs:
+    - path: metrics.json
+      hash: md5
+      md5: 1933a6354dccd7fab3598728906b7b7a
+      size: 105
