@@ -1,30 +1,36 @@
+# src/data_preprocessing.py
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import os
+import sys
+import yaml
 
-# --- Configuration ---
-RAW_DATA_PATH = r'data\raw\gender_pay_gap_india.csv'
-PROCESSED_DATA_FOLDER = 'data/processed'
-TARGET_COLUMN = 'Salary_LPA'
-TEST_SIZE = 0.2
-RANDOM_STATE = 42
-
-def preprocess_data(file_path):
+def preprocess_data(params_path):
     """
-    Loads, preprocesses, and splits the data.
+    Loads, preprocesses, and splits the data based on parameters.
     """
     print("Starting data preprocessing...")
 
+    # Load parameters from the YAML file
+    with open(params_path) as f:
+        params = yaml.safe_load(f)
+
+    # --- Configuration ---
+    RAW_DATA_PATH = r'data/raw/gender_pay_gap_india.csv'
+    PROCESSED_DATA_FOLDER = 'data/processed'
+    TARGET_COLUMN = 'Salary_LPA'
+    TEST_SIZE = params['preprocess']['test_size']
+    RANDOM_STATE = params['preprocess']['random_state']
+
     # Load data
-    df = pd.read_csv(file_path)
-    print(f"Loaded {len(df)} rows from {file_path}")
+    df = pd.read_csv(RAW_DATA_PATH)
+    print(f"Loaded {len(df)} rows.")
 
     # Drop the ID column
     df = df.drop('ID', axis=1)
-    print("Dropped 'ID' column.")
 
     # One-hot encode categorical features
-    # This creates new columns for each category and removes the original ones.
     categorical_features = ['Gender', 'Education_Level', 'Job_Role', 'Region']
     df_encoded = pd.get_dummies(df, columns=categorical_features, drop_first=True)
     print("One-hot encoded categorical features.")
@@ -49,8 +55,6 @@ def preprocess_data(file_path):
     y_test.to_csv(os.path.join(PROCESSED_DATA_FOLDER, 'y_test.csv'), index=False)
     print(f"Processed data saved to the '{PROCESSED_DATA_FOLDER}' directory.")
 
-    return X_train, X_test, y_train, y_test
-
 if __name__ == '__main__':
-    # This block allows the script to be run directly
-    preprocess_data(RAW_DATA_PATH)
+    # DVC will pass 'params.yaml' as the first command-line argument
+    preprocess_data(params_path=sys.argv[1])

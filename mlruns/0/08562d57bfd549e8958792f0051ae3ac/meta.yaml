@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/kunal/OneDrive/Desktop/Sem7/MLOps/MLOps%20Project/gender_pay_gap_project/mlruns/0/08562d57bfd549e8958792f0051ae3ac/artifacts
+deleted_time: 1759769654769
+end_time: 1759769590447
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: deleted
+run_id: 08562d57bfd549e8958792f0051ae3ac
+run_name: gaudy-donkey-555
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759769584856
+status: 3
+tags: []
+user_id: kunal

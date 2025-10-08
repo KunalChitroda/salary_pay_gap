@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/kunal/OneDrive/Desktop/Sem7/MLOps/MLOps%20Project/gender_pay_gap_project/mlruns/0/d48f81e71a914305976d80bc33dcd8ba/artifacts
+end_time: 1759769594567
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: d48f81e71a914305976d80bc33dcd8ba
+run_name: gifted-bug-84
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759769594320
+status: 3
+tags: []
+user_id: kunal

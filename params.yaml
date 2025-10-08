@@ -1,0 +1,29 @@
+# Parameters for the data preprocessing stage
+preprocess:
+  test_size: 0.2
+  random_state: 42
+
+tune:
+  # The n_iter for RandomizedSearchCV
+  n_iter: 5
+  cv: 5
+  param_grid:
+    n_estimators:
+    - 50
+    - 100
+    max_depth:
+    - 5
+    - 10
+    - 15
+    min_samples_leaf:
+    - 3
+    - 5
+    min_samples_split:
+    - 8
+    - 15
+train:
+  # Default parameters if tuning is skipped
+  n_estimators: 100
+  max_depth:
+  min_samples_leaf: 1
+  min_samples_split: 2

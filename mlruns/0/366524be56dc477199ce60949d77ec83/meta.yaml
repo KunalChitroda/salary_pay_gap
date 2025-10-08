@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/kunal/OneDrive/Desktop/Sem7/MLOps/MLOps%20Project/gender_pay_gap_project/mlruns/0/366524be56dc477199ce60949d77ec83/artifacts
+end_time: 1759770920493
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 366524be56dc477199ce60949d77ec83
+run_name: enthused-shrike-494
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759770920243
+status: 3
+tags: []
+user_id: kunal

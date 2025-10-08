@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/kunal/OneDrive/Desktop/Sem7/MLOps/MLOps%20Project/gender_pay_gap_project/mlruns/0/2d46ae2130744152833655ba823c499c/artifacts
+end_time: 1759769399528
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 2d46ae2130744152833655ba823c499c
+run_name: rogue-fowl-353
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759769399145
+status: 3
+tags: []
+user_id: kunal

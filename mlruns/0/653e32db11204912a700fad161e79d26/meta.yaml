@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/kunal/OneDrive/Desktop/Sem7/MLOps/MLOps%20Project/gender_pay_gap_project/mlruns/0/653e32db11204912a700fad161e79d26/artifacts
+end_time: 1759770432777
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 653e32db11204912a700fad161e79d26
+run_name: secretive-rat-548
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759770432499
+status: 3
+tags: []
+user_id: kunal

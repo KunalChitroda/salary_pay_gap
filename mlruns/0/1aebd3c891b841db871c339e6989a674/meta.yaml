@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/kunal/OneDrive/Desktop/Sem7/MLOps/MLOps%20Project/gender_pay_gap_project/mlruns/0/1aebd3c891b841db871c339e6989a674/artifacts
+deleted_time: 1759770823622
+end_time: 1759770545664
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: deleted
+run_id: 1aebd3c891b841db871c339e6989a674
+run_name: nimble-whale-104
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759770540718
+status: 3
+tags: []
+user_id: kunal

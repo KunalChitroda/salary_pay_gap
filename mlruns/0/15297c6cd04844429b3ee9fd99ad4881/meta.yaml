@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/kunal/OneDrive/Desktop/Sem7/MLOps/MLOps%20Project/gender_pay_gap_project/mlruns/0/15297c6cd04844429b3ee9fd99ad4881/artifacts
+end_time: 1759770549750
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 15297c6cd04844429b3ee9fd99ad4881
+run_name: classy-shrimp-435
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759770549466
+status: 3
+tags: []
+user_id: kunal

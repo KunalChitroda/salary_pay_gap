@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/kunal/OneDrive/Desktop/Sem7/MLOps/MLOps%20Project/gender_pay_gap_project/mlruns/0/3a7eff10b5134c8e94b395e662b6c923/artifacts
+deleted_time: 1759769647208
+end_time: 1759762356374
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: deleted
+run_id: 3a7eff10b5134c8e94b395e662b6c923
+run_name: abrasive-goat-238
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759762346400
+status: 3
+tags: []
+user_id: kunal

@@ -6,3 +6,5 @@ seaborn
 jupyter
 joblib
 mlflow
+PyYAML
+dvc[s3]

@@ -1,6 +1,13 @@
-name: MLOps CI/CD Pipeline with DVC
+name: MLOps CI/CD Pipeline with DVC and S3
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   run-pipeline:
@@ -12,30 +19,32 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Install Dependencies
         run: |
           pip install -r requirements.txt
-          pip install "dvc[gdrive]" # Install DVC
 
-      - name: Authenticate and Configure DVC
-        # This step uses a GitHub Secret to securely store your Google Drive credentials
-        env:
-          GDRIVE_CREDENTIALS_DATA: ${{ secrets.GDRIVE_CREDENTIALS_DATA }}
+      - name: Configure AWS Credentials
+        # This action securely configures the AWS credentials needed by DVC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1 # Change this to your bucket's region
+
+      - name: Pull DVC Data and Models from S3
         run: |
-          # Create credentials file for DVC
-          echo "$GDRIVE_CREDENTIALS_DATA" > credentials.json
-          dvc remote modify myremote gdrive_client_id $(jq -r '.client_id' credentials.json)
-          dvc remote modify myremote gdrive_client_secret $(jq -r '.client_secret' credentials.json)
-
-      - name: Pull DVC Data and Models
-        run: dvc pull -r myremote
+          dvc remote add -f aws ${{ secrets.DVC_REMOTE_URL }}
+          dvc remote default aws
 
       - name: Reproduce DVC Pipeline
-        # This command re-runs any changed stages of your pipeline
         run: dvc repro
 
-      - name: Show Metrics
-        # Display the performance of the model from the metrics file
-        run: cat metrics.json
+      - name: Show and Log Metrics
+        run: |
+          dvc metrics show
+          cat metrics.json
+      
+      - name: Push DVC artifacts to S3
+        run: dvc push

@@ -1,0 +1,6 @@
+[core]
+    remote = aws
+['remote "myremote"']
+    url = s3://paygapbalti
+['remote "aws"']
+    url = s3://paygapbalti/dvc-store

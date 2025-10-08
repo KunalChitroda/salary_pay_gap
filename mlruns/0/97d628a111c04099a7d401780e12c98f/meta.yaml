@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/kunal/OneDrive/Desktop/Sem7/MLOps/MLOps%20Project/gender_pay_gap_project/mlruns/0/97d628a111c04099a7d401780e12c98f/artifacts
+deleted_time: 1759769647274
+end_time: 1759765545511
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: deleted
+run_id: 97d628a111c04099a7d401780e12c98f
+run_name: fun-mare-24
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759765522656
+status: 3
+tags: []
+user_id: kunal

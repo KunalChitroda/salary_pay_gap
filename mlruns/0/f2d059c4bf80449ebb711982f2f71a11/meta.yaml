@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/kunal/OneDrive/Desktop/Sem7/MLOps/MLOps%20Project/gender_pay_gap_project/mlruns/0/f2d059c4bf80449ebb711982f2f71a11/artifacts
+deleted_time: 1759770823625
+end_time: 1759770611257
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: deleted
+run_id: f2d059c4bf80449ebb711982f2f71a11
+run_name: legendary-sheep-4
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759770606369
+status: 3
+tags: []
+user_id: kunal
