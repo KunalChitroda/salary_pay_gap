@@ -37,6 +37,7 @@ jobs:
         run: |
           dvc remote add -f aws ${{ secrets.DVC_REMOTE_URL }}
           dvc remote default aws
+          dvc pull
 
       - name: Reproduce DVC Pipeline
         run: dvc repro
