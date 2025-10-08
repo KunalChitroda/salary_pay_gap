@@ -17,3 +17,6 @@ metrics.json
 # IDE/Editor folders
 .idea/
 .vscode/
+
+/processed
+data/raw/gender_pay_gap_india.csv
