@@ -9,7 +9,7 @@ stages:
     cmd: python src/data_preprocessing.py params.yaml
     deps:
       - src/data_preprocessing.py
-      - data/raw/gender_pay_gap_india_correlated.csv
+      - data/raw/gender_pay_gap_india.csv
     params:
       - preprocess
     outs:
