@@ -10,7 +10,6 @@ __pycache__/
 
 # DVC outputs
 data/processed/
-models/
 models/ 
 best_params.json
 metrics.json
