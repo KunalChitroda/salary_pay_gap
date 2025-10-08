@@ -1,5 +1,3 @@
-# dvc.yaml
-
 params:
   - preprocess
   - train
