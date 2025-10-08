@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/kunal/OneDrive/Desktop/Sem7/MLOps/MLOps%20Project/gender_pay_gap_project/mlruns/0/c85b15ace1384bd192044f405a008b59/artifacts
+end_time: 1759933880810
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: c85b15ace1384bd192044f405a008b59
+run_name: polite-bat-508
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759933880089
+status: 3
+tags: []
+user_id: kunal

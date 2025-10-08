@@ -59,12 +59,8 @@ stages:
       md5: 9353296cfc2209cde18d4729f5ff0342
       size: 107
   train:
-    cmd: python src/model_trainer.py
+    cmd: python src/model_trainer.py params.yaml
     deps:
-    - path: best_params.json
-      hash: md5
-      md5: 9353296cfc2209cde18d4729f5ff0342
-      size: 107
     - path: data/processed
       hash: md5
       md5: 79120a2f7d49c433074ebe54418aef7d.dir
@@ -72,13 +68,20 @@ stages:
       nfiles: 4
     - path: src/model_trainer.py
       hash: md5
-      md5: 68b8eea239de1c928bd56b087d954e9b
-      size: 1387
+      md5: cc8bdfff9597ada622fe9fcec17bdfa0
+      size: 1725
+    params:
+      params.yaml:
+        train:
+          n_estimators: 100
+          max_depth:
+          min_samples_leaf: 1
+          min_samples_split: 2
     outs:
     - path: models/random_forest_model.pkl
       hash: md5
-      md5: 83dcd531e6fe57d78a7f584672047301
-      size: 6549057
+      md5: 6e39fd375ecc68072f9d337fe71831b0
+      size: 58301697
   evaluate:
     cmd: python src/model_evaluation.py
     deps:
@@ -89,8 +92,8 @@ stages:
       nfiles: 4
     - path: models/random_forest_model.pkl
       hash: md5
-      md5: 83dcd531e6fe57d78a7f584672047301
-      size: 6549057
+      md5: 6e39fd375ecc68072f9d337fe71831b0
+      size: 58301697
     - path: src/model_evaluation.py
       hash: md5
       md5: f7e300fd4121b70e43c02c9a297bcf1e
@@ -98,5 +101,5 @@ stages:
     outs:
     - path: metrics.json
       hash: md5
-      md5: fc52b14afd2d4f49b3d430d41965d63a
+      md5: 5f242ad65d6876be0af7c1fd9d8bc06f
       size: 104

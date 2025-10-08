@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/kunal/OneDrive/Desktop/Sem7/MLOps/MLOps%20Project/gender_pay_gap_project/mlruns/0/ca58bebf59bd4a2e9a00b0a5c3827541/artifacts
+end_time: 1759935391105
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: ca58bebf59bd4a2e9a00b0a5c3827541
+run_name: funny-skink-583
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759935390847
+status: 3
+tags: []
+user_id: kunal

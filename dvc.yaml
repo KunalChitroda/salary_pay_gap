@@ -1,7 +1,7 @@
-# Add this line at the top to tell DVC this file uses parameters
+# dvc.yaml
+
 params:
   - preprocess
-  - tune
   - train
 
 stages:
@@ -9,30 +9,19 @@ stages:
     cmd: python src/data_preprocessing.py params.yaml
     deps:
       - src/data_preprocessing.py
-      - data/raw/gender_pay_gap_india.csv
+      - data/raw/gender_pay_gap_india_correlated.csv
     params:
-      - preprocess # This stage uses the 'preprocess' section from params.yaml
+      - preprocess
     outs:
       - data/processed
-
-  tune:
-    cmd: python src/hyperparameter_tuning.py params.yaml
-    deps:
-      - src/hyperparameter_tuning.py
-      - data/processed
-    params:
-      - tune # This stage uses the 'tune' section from params.yaml
-    outs:
-      - best_params.json
 
   train:
-    cmd: python src/model_trainer.py
+    cmd: python src/model_trainer.py params.yaml
     deps:
       - src/model_trainer.py
       - data/processed
-      - best_params.json
-    # The train stage implicitly uses the best_params.json,
-    # but we could add a params section if it had its own settings.
+    params:
+      - train
     outs:
       - models/random_forest_model.pkl
 

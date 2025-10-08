@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/kunal/OneDrive/Desktop/Sem7/MLOps/MLOps%20Project/gender_pay_gap_project/mlruns/0/56f14acb41da4b86a64a4f1346c707ad/artifacts
+end_time: 1759933876289
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 56f14acb41da4b86a64a4f1346c707ad
+run_name: delightful-ox-421
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759933875521
+status: 3
+tags: []
+user_id: kunal
