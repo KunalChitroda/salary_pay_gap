@@ -1,5 +1,3 @@
-# src/data_preprocessing.py
-
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import os
@@ -8,18 +6,20 @@ import yaml
 
 def preprocess_data(params_path):
     """
-    Loads, preprocesses, and splits the data based on parameters.
+    Loads and preprocesses the Telco Customer Churn dataset.
     """
-    print("Starting data preprocessing...")
+    print("Starting data preprocessing for Customer Churn...")
 
     # Load parameters from the YAML file
     with open(params_path) as f:
         params = yaml.safe_load(f)
 
     # --- Configuration ---
-    RAW_DATA_PATH = r'data/raw/gender_pay_gap_india.csv'
+    # Corrected the RAW_DATA_PATH to the new file name
+    RAW_DATA_PATH = 'data/raw/Telco-Customer-Churn.csv'
     PROCESSED_DATA_FOLDER = 'data/processed'
-    TARGET_COLUMN = 'Salary_LPA'
+    # Corrected the TARGET_COLUMN
+    TARGET_COLUMN = 'Churn'
     TEST_SIZE = params['preprocess']['test_size']
     RANDOM_STATE = params['preprocess']['random_state']
 
@@ -27,11 +27,26 @@ def preprocess_data(params_path):
     df = pd.read_csv(RAW_DATA_PATH)
     print(f"Loaded {len(df)} rows.")
 
-    # Drop the ID column
-    df = df.drop('ID', axis=1)
+    # --- Data Cleaning and Feature Engineering ---
 
-    # One-hot encode categorical features
-    categorical_features = ['Gender', 'Education_Level', 'Job_Role', 'Region']
+    # Drop the customerID column as it's not a predictive feature
+    df = df.drop('customerID', axis=1)
+    print("Dropped 'customerID' column.")
+
+    # The 'TotalCharges' column is an object type and contains spaces.
+    # Convert it to a numeric type, coercing errors to NaN (Not a Number).
+    df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
+    # Drop the few rows that now have missing values for TotalCharges.
+    df.dropna(inplace=True)
+    print("Cleaned 'TotalCharges' column.")
+
+    # Convert the target variable 'Churn' from "Yes"/"No" to 1/0.
+    df[TARGET_COLUMN] = df[TARGET_COLUMN].apply(lambda x: 1 if x == 'Yes' else 0)
+    print("Encoded target column 'Churn' to 1/0.")
+
+    # One-hot encode all other categorical features
+    # This list contains all non-numeric columns except the target.
+    categorical_features = df.select_dtypes(include=['object']).columns
     df_encoded = pd.get_dummies(df, columns=categorical_features, drop_first=True)
     print("One-hot encoded categorical features.")
 

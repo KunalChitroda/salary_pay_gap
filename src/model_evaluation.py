@@ -1,6 +1,6 @@
 import pandas as pd
 import joblib
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import os
 import sys
 import yaml
@@ -15,9 +15,9 @@ METRICS_FILE = 'metrics.json'
 
 def evaluate_model(params_path):
     """
-    Evaluates the model and logs fixed parameters and metrics to MLflow.
+    Evaluates the classification model and logs parameters and metrics to MLflow.
     """
-    print("Starting model evaluation and MLflow logging...")
+    print("Starting model evaluation for Customer Churn...")
 
     # Load parameters from the main YAML file
     with open(params_path) as f:
@@ -39,21 +39,29 @@ def evaluate_model(params_path):
         # Make predictions
         y_pred = model.predict(X_test)
 
-        # Calculate metrics
-        mae = mean_absolute_error(y_test, y_pred)
-        mse = mean_squared_error(y_test, y_pred)
-        r2 = r2_score(y_test, y_pred)
+        # Calculate classification metrics
+        accuracy = accuracy_score(y_test, y_pred)
+        precision = precision_score(y_test, y_pred)
+        recall = recall_score(y_test, y_pred)
+        f1 = f1_score(y_test, y_pred)
 
         # --- MLFLOW: Log the metrics ---
-        print(f"Logging metrics: MAE={mae:.2f}, MSE={mse:.2f}, R2={r2:.2%}")
-        mlflow.log_metric("mae", mae)
-        mlflow.log_metric("mse", mse)
-        mlflow.log_metric("r2_score", r2)
+        print(f"Logging metrics: Accuracy={accuracy:.2%}, Precision={precision:.2%}, Recall={recall:.2%}")
+        mlflow.log_metric("accuracy", accuracy)
+        mlflow.log_metric("precision", precision)
+        mlflow.log_metric("recall", recall)
+        mlflow.log_metric("f1_score", f1)
 
         # Save metrics to JSON file for DVC
         with open(METRICS_FILE, 'w') as f:
-            json.dump({"mae": mae, "mse": mse, "r2_score": r2}, f, indent=4)
+            json.dump({
+                "accuracy": accuracy,
+                "precision": precision,
+                "recall": recall,
+                "f1_score": f1
+            }, f, indent=4)
         print(f"Metrics saved to '{METRICS_FILE}' for DVC.")
 
 if __name__ == '__main__':
+    # Assume params.yaml is in the root directory
     evaluate_model(params_path='params.yaml')

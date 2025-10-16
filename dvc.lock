@@ -3,14 +3,14 @@ stages:
   preprocess:
     cmd: python src/data_preprocessing.py params.yaml
     deps:
-    - path: data/raw/gender_pay_gap_india.csv
+    - path: data/raw/Telco-Customer-Churn.csv
       hash: md5
-      md5: 4e4f4215dd5c603883cf96391cd5e552
-      size: 507189
+      md5: 0f9de68e012bd3aed5fa7cdc9fc421af
+      size: 977501
     - path: src/data_preprocessing.py
       hash: md5
-      md5: f0145d15e1221d611de93c0a038c9ece
-      size: 2229
+      md5: fab1a99213d914816764895fdf010c39
+      size: 3093
     params:
       params.yaml:
         preprocess:
@@ -19,8 +19,8 @@ stages:
     outs:
     - path: data/processed
       hash: md5
-      md5: 79120a2f7d49c433074ebe54418aef7d.dir
-      size: 994697
+      md5: 41616036666694c6fe956d58c2200ec9.dir
+      size: 1188516
       nfiles: 4
   tune:
     cmd: python src/hyperparameter_tuning.py params.yaml
@@ -63,43 +63,43 @@ stages:
     deps:
     - path: data/processed
       hash: md5
-      md5: 79120a2f7d49c433074ebe54418aef7d.dir
-      size: 994697
+      md5: 41616036666694c6fe956d58c2200ec9.dir
+      size: 1188516
       nfiles: 4
     - path: src/model_trainer.py
       hash: md5
-      md5: cc8bdfff9597ada622fe9fcec17bdfa0
-      size: 1725
+      md5: 64ec1487f1a1f68af7d750caab1ab1df
+      size: 1474
     params:
       params.yaml:
         train:
           n_estimators: 100
           max_depth:
-          min_samples_leaf: 1
-          min_samples_split: 2
+          min_samples_leaf: 2
+          min_samples_split: 5
     outs:
     - path: models/random_forest_model.pkl
       hash: md5
-      md5: 6e39fd375ecc68072f9d337fe71831b0
-      size: 58301697
+      md5: 6429300d56816e929c6be142edf41d0c
+      size: 10296169
   evaluate:
     cmd: python src/model_evaluation.py
     deps:
     - path: data/processed
       hash: md5
-      md5: 79120a2f7d49c433074ebe54418aef7d.dir
-      size: 994697
+      md5: 41616036666694c6fe956d58c2200ec9.dir
+      size: 1188516
       nfiles: 4
     - path: models/random_forest_model.pkl
       hash: md5
-      md5: 6e39fd375ecc68072f9d337fe71831b0
-      size: 58301697
+      md5: 6429300d56816e929c6be142edf41d0c
+      size: 10296169
     - path: src/model_evaluation.py
       hash: md5
-      md5: f7e300fd4121b70e43c02c9a297bcf1e
-      size: 2007
+      md5: a9b0237faabd94d30c01730baa0defe0
+      size: 2347
     outs:
     - path: metrics.json
       hash: md5
-      md5: 5f242ad65d6876be0af7c1fd9d8bc06f
-      size: 104
+      md5: 6061482b865fb89f0ee53266b007dcec
+      size: 150

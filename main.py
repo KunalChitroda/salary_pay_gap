@@ -1,30 +1,32 @@
-# main.py
-
 # Imports from the 'src' folder
 from src.data_preprocessing import preprocess_data
 from src.model_trainer import train_model
 from src.model_evaluation import evaluate_model
 
 # --- Configuration ---
-RAW_DATA_PATH = r'data\raw\gender_pay_gap_india.csv'
+PARAMS_PATH = 'params.yaml'
 
 def run_pipeline():
     """
-    Executes the entire machine learning pipeline from start to finish.
+    Executes the entire machine learning pipeline from start to finish
+    by calling each script with the parameters file.
     """
-    print("🚀 Starting the full machine learning pipeline...")
+    print("🚀 Starting the full machine learning pipeline for Customer Churn...")
 
     # Step 1: Preprocess the data
     print("\n--- Step 1: Data Preprocessing ---")
-    preprocess_data(RAW_DATA_PATH)
+    # Pass the params file to the function
+    preprocess_data(params_path=PARAMS_PATH)
 
     # Step 2: Train the model
     print("\n--- Step 2: Model Training ---")
-    train_model()
+    # Pass the params file to the function
+    train_model(params_path=PARAMS_PATH)
 
     # Step 3: Evaluate the model
     print("\n--- Step 3: Model Evaluation ---")
-    evaluate_model()
+    # Pass the params file to the function
+    evaluate_model(params_path=PARAMS_PATH)
 
     print("\n✅ Pipeline execution finished successfully!")
 

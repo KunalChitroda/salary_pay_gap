@@ -19,4 +19,4 @@ metrics.json
 .vscode/
 
 /processed
-data/raw/gender_pay_gap_india.csv
+data/raw/Telco-Customer-Churn.csv
