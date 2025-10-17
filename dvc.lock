@@ -80,8 +80,8 @@ stages:
     outs:
     - path: models/random_forest_model.pkl
       hash: md5
-      md5: 6429300d56816e929c6be142edf41d0c
-      size: 10296169
+      md5: 44e0c8e9c3365c2f8c60d5aa81072a79
+      size: 10296329
   evaluate:
     cmd: python src/model_evaluation.py
     deps:
@@ -92,8 +92,8 @@ stages:
       nfiles: 4
     - path: models/random_forest_model.pkl
       hash: md5
-      md5: 6429300d56816e929c6be142edf41d0c
-      size: 10296169
+      md5: 44e0c8e9c3365c2f8c60d5aa81072a79
+      size: 10296329
     - path: src/model_evaluation.py
       hash: md5
       md5: a9b0237faabd94d30c01730baa0defe0

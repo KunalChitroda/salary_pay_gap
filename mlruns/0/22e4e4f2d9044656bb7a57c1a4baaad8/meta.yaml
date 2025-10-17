@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/kunal/OneDrive/Desktop/Sem7/MLOps/MLOps%20Project/gender_pay_gap_project/mlruns/0/22e4e4f2d9044656bb7a57c1a4baaad8/artifacts
+end_time: 1760716651184
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 22e4e4f2d9044656bb7a57c1a4baaad8
+run_name: popular-cub-539
+run_uuid: 22e4e4f2d9044656bb7a57c1a4baaad8
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1760716650584
+status: 3
+tags: []
+user_id: kunal

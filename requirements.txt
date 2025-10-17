@@ -1,11 +1,28 @@
-pandas
-numpy
-scikit-learn
-matplotlib
-seaborn
-jupyter
-joblib
-mlflow
-PyYAML
-dvc[s3]
-awscli
+# --- Core Data Science & ML Libraries ---
+# Used for data manipulation, numerical operations, and machine learning
+pandas==2.2.2
+numpy==1.26.4
+scikit-learn==1.4.2
+joblib==1.4.2
+
+# --- Data Visualization ---
+# Used in notebooks for Exploratory Data Analysis (EDA)
+matplotlib==3.8.4
+seaborn==0.13.2
+
+# --- Development Environment ---
+# For running Jupyter notebooks
+jupyterlab==4.1.6
+
+# --- MLOps & Versioning Tools ---
+# For experiment tracking, data versioning, and cloud integration
+mlflow==2.13.0
+PyYAML==6.0.1
+dvc[s3]==3.50.1
+awscli==1.32.94
+
+# --- API & Web Serving ---
+# For creating and running the prediction API
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+python-multipart==0.0.9
