@@ -1,115 +1,146 @@
-**MLOps in Action: A Reproducible Salary Prediction Pipeline**
+# MLOps in Action: A Customer Churn Prediction API
 
-This project demonstrates a complete, end-to-end MLOps pipeline to predict individual salaries in India using the "Gender Pay Gap" dataset. The core focus is on creating a reproducible, version-controlled, and automated machine learning system using modern MLOps tools.
+This project demonstrates a complete, end-to-end MLOps pipeline to predict customer churn. The core focus is on creating a reproducible, version-controlled, and automated machine learning system that is ultimately deployed as a live prediction API.
 
-**🚀 MLOps Workflow**
-This project is built around a robust, automated workflow that ensures reproducibility and continuous integration.
+-----
 
-Version Control: We use a dual version control system. Git tracks our Python source code, while DVC tracks our large data and model files, keeping the repository lightweight.
+## 🚀 MLOps Workflow
 
-Reproducible Pipeline: The entire workflow is defined in dvc.yaml. This file orchestrates all stages, from data preprocessing to model evaluation, ensuring that anyone can reproduce the results with a single command.
+This project is built around a robust, automated workflow that ensures reproducibility, continuous integration, and continuous delivery.
 
-Experiment Tracking: MLflow is integrated into our pipeline to automatically log the parameters and performance metrics of every model we train. This provides an interactive dashboard to compare experiments.
+1.  **Version Control**: We use a dual version control system. **Git** tracks our Python source code, while **DVC** tracks our data and model files, keeping the repository lightweight.
+2.  **Reproducible Pipeline**: The entire training workflow is defined in `dvc.yaml`. This file orchestrates all stages, from data preprocessing to model evaluation, ensuring that anyone can reproduce the model with a single command (`dvc repro`).
+3.  **Experiment Tracking**: **MLflow** is integrated into our pipeline to automatically log the parameters and performance metrics of every model we train. This provides an interactive dashboard to compare experiments.
+4.  **CI/CD Automation**: A **GitHub Actions** workflow is configured to automatically run the entire DVC training pipeline on every `git push`. This ensures our model is continuously validated against the latest code.
+5.  **Deployment**: The trained model is served via a **FastAPI** application, which is containerized using **Docker** for easy and consistent deployment.
 
-CI/CD Automation: A GitHub Actions workflow is configured to automatically run the entire DVC pipeline on every git push. This ensures our model is continuously validated against the latest code and data.
+-----
 
-**🛠️ Tech Stack**
-Language: Python 3.9
+## 🛠️ Tech Stack
 
-Data Analysis: Pandas, NumPy
+  * **Language**: Python 3.9
+  * **Machine Learning**: Scikit-learn, Pandas
+  * **Version Control**: Git & DVC (Data Version Control)
+  * **Experiment Tracking**: MLflow
+  * **API Framework**: FastAPI
+  * **Containerization**: Docker
+  * **Automation (CI/CD)**: GitHub Actions
+  * **Remote Storage**: AWS S3
 
-Machine Learning: Scikit-learn
+-----
 
-Version Control: Git & DVC (Data Version Control)
+## 📂 Project Structure
 
-Experiment Tracking: MLflow
-
-Automation (CI/CD): GitHub Actions
-
-Remote Storage: AWS S3
-
-**📂 Project Structure**
+```
 ├── .github/workflows/      # CI/CD pipeline definition
 ├── data/
 │   ├── raw/                # Raw, immutable data
 │   └── processed/          # Cleaned data (Tracked by DVC)
 ├── models/                 # Trained models (Tracked by DVC)
-├── notebooks/              # Jupyter notebooks for EDA
-├── src/                    # Source code for the pipeline stages
+├── src/                    # Source code for the DVC pipeline stages
 ├── .dvc/                   # DVC internal files
 ├── .gitignore              # Files to be ignored by Git
+├── app.py                  # FastAPI application for serving predictions
+├── Dockerfile              # Docker instructions for building the API image
 ├── dvc.yaml                # DVC pipeline definition
 ├── metrics.json            # Final model metrics (Tracked by DVC)
 ├── params.yaml             # Parameters for the pipeline
 ├── README.md               # You are here!
 └── requirements.txt        # Project dependencies
-⚙️ Setup and Installation
+```
+
+-----
+
+## ⚙️ Setup and Installation
+
 To set up this project on your local machine, follow these steps.
 
-**Clone the Repository**
+1.  **Clone the Repository**
+    ```bash
+    git clone https://github.com/KunalChitroda/salary_pay_gap.git
+    cd salary_pay_gap
+    ```
+2.  **Create and Activate a Virtual Environment**
+    ```bash
+    python -m venv venv
+    venv\Scripts\activate  # On Windows
+    # source venv/bin/activate  # On macOS/Linux
+    ```
+3.  **Install Dependencies**
+    ```bash
+    pip install -r requirements.txt
+    ```
+4.  **Configure DVC with Your Remote Storage**
+    If you're using AWS S3, configure your credentials:
+    ```bash
+    aws configure
+    ```
+5.  **Pull DVC-tracked Data**
+    This command downloads the dataset and trained model from the remote S3 storage.
+    ```bash
+    dvc pull
+    ```
 
-Bash
+-----
 
-git clone https://github.com/KunalChitroda/salary_pay_gap.git
-cd salary_pay_gap
-Create and Activate a Virtual Environment
+## ▶️ How to Run the Project
 
-Bash
+You can either reproduce the training pipeline or run the live prediction API.
 
-python -m venv venv
-venv\Scripts\activate  # On Windows
-# source venv/bin/activate  # On macOS/Linux
-Install Dependencies
+### Reproduce the Training Pipeline
 
-Bash
+This command will run all the stages defined in `dvc.yaml` (preprocess, train, evaluate).
 
-pip install -r requirements.txt
-Configure DVC with Your Remote Storage
-If you're using AWS S3, configure your credentials:
-
-Bash
-
-aws configure
-Pull DVC-tracked Data
-This command downloads the dataset and models from the remote S3 storage.
-
-Bash
-
-dvc pull
-▶️ How to Run the Pipeline
-You can reproduce the entire pipeline or run new experiments with DVC.
-
-Reproduce the Pipeline
-This command will run all the stages defined in dvc.yaml (preprocess, train, evaluate).
-
-Bash
-
+```bash
 dvc repro
-Run a New Experiment
-To train the model with different parameters, use dvc exp run with the --set-param flag. DVC will run the experiment without overwriting your main results.
+```
 
-Bash
+### Run the Prediction API Locally
 
-dvc exp run --set-param train.n_estimators=150
+This command starts the FastAPI server.
 
-View Experiments
-To see a table comparing all your experiments, run:
+```bash
+uvicorn app:app --reload
+```
 
-Bash
+Then open your browser to **`http://127.0.0.1:8000/docs`** to interact with the API.
 
-dvc exp show --only-changed
+-----
 
-**📊 Experiment Tracking with MLflow**
-All experiments are logged with MLflow. To launch the interactive dashboard, run:
+## 🐳 Docker Deployment
 
-Bash
+The prediction API is designed to be deployed as a Docker container.
 
+1.  **Build the Docker Image**
+    ```bash
+    docker build -t churn-api .
+    ```
+2.  **Run the Docker Container**
+    ```bash
+    docker run -p 8080:80 churn-api
+    ```
+    The API will then be accessible at **`http://localhost:8080/docs`**.
+
+-----
+
+## 📊 Experiment Tracking with MLflow
+
+All training runs are logged with MLflow. To launch the interactive dashboard, run:
+
+```bash
 mlflow ui
-Then open your browser to http://127.0.0.1:5000 to view and compare your runs.
+```
 
-📈 Results
-Our Random Forest model was trained on a fixed set of hyperparameters defined in params.yaml. The final performance on the test set is:
+Then open your browser to `http://127.0.0.1:5000` to view and compare your runs.
 
-R-squared Score: ~96.98%
+-----
 
-This indicates a strong predictive performance. The metrics for the current version of the model are always available in the metrics.json file.
+## 📈 Results
+
+Our Random Forest Classifier was trained on a fixed set of hyperparameters defined in `params.yaml`. The final performance on the test set is:
+
+  * **Accuracy**: \~79.60%
+  * **Precision**: \~66.29%
+  * **Recall**: \~47.33%
+
+This indicates a solid baseline performance for identifying churning customers. The metrics for the current version of the model are always available in the `metrics.json` file.
