@@ -1,3 +1,5 @@
+
+
 # MLOps in Action: A Customer Churn Prediction API
 
 This project demonstrates a complete, end-to-end MLOps pipeline to predict customer churn. The core focus is on creating a reproducible, version-controlled, and automated machine learning system that is ultimately deployed as a live prediction API.

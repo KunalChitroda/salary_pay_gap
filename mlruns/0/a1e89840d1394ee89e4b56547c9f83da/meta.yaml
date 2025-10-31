@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/kunal/OneDrive/Desktop/Sem7/MLOps/MLOps%20Project/gender_pay_gap_project/mlruns/0/a1e89840d1394ee89e4b56547c9f83da/artifacts
+end_time: 1761736402916
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: a1e89840d1394ee89e4b56547c9f83da
+run_name: popular-dog-677
+run_uuid: a1e89840d1394ee89e4b56547c9f83da
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1761736402358
+status: 3
+tags: []
+user_id: kunal

@@ -22,12 +22,16 @@ stages:
       - train
     outs:
       - models/random_forest_model.pkl
+      - models/model_columns.json
 
   evaluate:
-    cmd: python src/model_evaluation.py
+    cmd: python src/model_evaluation.py params.yaml
     deps:
       - src/model_evaluation.py
       - data/processed
       - models/random_forest_model.pkl
+    params:
+      - train
+      - preprocess
     metrics:
       - metrics.json

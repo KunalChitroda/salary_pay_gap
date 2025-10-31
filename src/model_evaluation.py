@@ -6,6 +6,8 @@ import sys
 import yaml
 import json
 import mlflow
+import shap               # Import SHAP
+import matplotlib.pyplot as plt # Import matplotlib
 
 # --- Configuration ---
 PROCESSED_DATA_FOLDER = 'data/processed'
@@ -15,7 +17,8 @@ METRICS_FILE = 'metrics.json'
 
 def evaluate_model(params_path):
     """
-    Evaluates the classification model and logs parameters and metrics to MLflow.
+    Evaluates the classification model, logs parameters, metrics,
+    and a SHAP summary plot to MLflow.
     """
     print("Starting model evaluation for Customer Churn...")
 
@@ -62,6 +65,31 @@ def evaluate_model(params_path):
             }, f, indent=4)
         print(f"Metrics saved to '{METRICS_FILE}' for DVC.")
 
+        # --- UPDATED SHAP SECTION ---
+        print("Calculating SHAP summary plot...")
+        if len(X_test) > 100:
+            X_test_sample = X_test.sample(100, random_state=42)
+        else:
+            X_test_sample = X_test
+        
+        # Create the explainer
+        explainer = shap.TreeExplainer(model)
+        
+        # Create the new, robust Explanation object
+        explanation = explainer(X_test_sample)
+        
+        # Create and save the summary plot
+        # We slice the Explanation object: [:, :, 1] means (all_samples, all_features, class_1)
+        shap.summary_plot(explanation[:, :, 1], X_test_sample, show=False)
+        
+        plot_path = "shap_summary_plot.png"
+        plt.savefig(plot_path, bbox_inches='tight') # Save the plot
+        plt.close() # Close the plot to free up memory
+        
+        # Log the plot as an artifact in MLflow
+        mlflow.log_artifact(plot_path)
+        print(f"SHAP summary plot saved and logged to MLflow as '{plot_path}'.")
+        # --- END OF UPDATED SHAP SECTION ---
+
 if __name__ == '__main__':
-    # Assume params.yaml is in the root directory
     evaluate_model(params_path='params.yaml')

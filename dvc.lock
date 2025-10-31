@@ -68,8 +68,8 @@ stages:
       nfiles: 4
     - path: src/model_trainer.py
       hash: md5
-      md5: 64ec1487f1a1f68af7d750caab1ab1df
-      size: 1474
+      md5: 612a1bebb3fb6ccf90c0737b165d743d
+      size: 2097
     params:
       params.yaml:
         train:
@@ -78,12 +78,16 @@ stages:
           min_samples_leaf: 2
           min_samples_split: 5
     outs:
+    - path: models/model_columns.json
+      hash: md5
+      md5: 02622decba23c90cbd5df082f879a5e9
+      size: 911
     - path: models/random_forest_model.pkl
       hash: md5
       md5: 44e0c8e9c3365c2f8c60d5aa81072a79
       size: 10296329
   evaluate:
-    cmd: python src/model_evaluation.py
+    cmd: python src/model_evaluation.py params.yaml
     deps:
     - path: data/processed
       hash: md5
@@ -96,8 +100,18 @@ stages:
       size: 10296329
     - path: src/model_evaluation.py
       hash: md5
-      md5: a9b0237faabd94d30c01730baa0defe0
-      size: 2347
+      md5: 10c8abf7f02b9d29df856b439cdf4b9c
+      size: 3489
+    params:
+      params.yaml:
+        preprocess:
+          test_size: 0.2
+          random_state: 42
+        train:
+          n_estimators: 100
+          max_depth:
+          min_samples_leaf: 2
+          min_samples_split: 5
     outs:
     - path: metrics.json
       hash: md5

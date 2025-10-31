@@ -12,7 +12,7 @@ seaborn==0.13.2
 
 # --- Development Environment ---
 # For running Jupyter notebooks
-jupyterlab==4.1.6
+jupyterlab==4.4.9
 
 # --- MLOps & Versioning Tools ---
 # For experiment tracking, data versioning, and cloud integration
@@ -26,3 +26,12 @@ awscli==1.32.94
 fastapi==0.111.0
 uvicorn[standard]==0.29.0
 python-multipart==0.0.9
+
+# --- Additional Utilities ---
+# For building interactive web apps and making HTTP requests
+streamlit==1.36.0
+requests==2.31.0
+
+shap==0.45.1
+# matplotlib is already a dependency of seaborn, but good to have
+matplotlib==3.8.4
