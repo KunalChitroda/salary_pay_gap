@@ -2,12 +2,14 @@ import streamlit as st
 import requests
 import json
 import pandas as pd
-import shap  # Import SHAP
+import shap
+import numpy as np
+import streamlit.components.v1 as components
 
 # ----------------------------------------------------
 # Configuration
 # ----------------------------------------------------
-API_URL = "http://34.236.154.223/predict"
+API_URL = "http://3.228.187.148/predict"
 st.set_page_config(page_title="Churn Predictor", layout="wide")
 
 # ----------------------------------------------------
@@ -28,17 +30,16 @@ def get_prediction(data):
         try:
             st.error(f"Response content: {response.text}")
         except NameError:
-            pass # Response object might not be defined if connection failed
+            pass
         return {"error": f"An error occurred: {e}"}
 
 def process_input(data):
     """
     Converts human-readable frontend inputs into the one-hot encoded
-    format that the prediction API expects.
+    format that the prediction API expects (using underscore names).
     """
     
-    # This is the master list of all 29 columns your model was trained on.
-    # Note: We must convert keys to the underscore format for the Pydantic model
+    # This dictionary must match the Pydantic model in your 'app.py'
     api_data = {
         "tenure": data['tenure'],
         "MonthlyCharges": data['MonthlyCharges'],
@@ -149,31 +150,39 @@ if st.button("Predict Churn", type="primary"):
                 st.success(f"Prediction: **{prediction}**")
                 st.info(f"Probability of Churn: **{probability}**")
             
-            # --- ADD THIS SHAP SECTION ---
+            # --- TEXT-BASED SHAP EXPLANATION ---
             st.divider()
             st.subheader("Why this prediction? (Explainable AI)")
             
             try:
                 # Load the data from the API response
-                base_value = result.get("shap_base_value")
-                shap_values = result.get("shap_values")
+                shap_values = np.array(result.get("shap_values"))
                 feature_names = result.get("feature_names")
-                feature_values = result.get("feature_values")
+                feature_values = np.array(result.get("feature_values"))
 
-                # Create the SHAP Explanation object
-                explanation = shap.Explanation(
-                    values=shap_values,
-                    base_values=base_value,
-                    data=feature_values,
-                    feature_names=feature_names
-                )
+                # Combine features and their SHAP values
+                impacts = []
+                for i in range(len(feature_names)):
+                    impacts.append((feature_names[i], feature_values[i], shap_values[i]))
+
+                # A positive SHAP value pushes towards CHURN (Class 1)
+                # A negative SHAP value pushes towards NO CHURN (Class 0)
                 
-                # Render the force plot
-                # We need to explicitly pass plot_html=True for Streamlit
-                st.pydeck_chart = st.empty() # Clear previous plot
-                with st.pydeck_chart:
-                    shap.force_plot(base_value, shap_values, feature_values, feature_names, plot_html=True, show=False)
+                # Sort by the magnitude of the SHAP value
+                pushing_features = sorted([f for f in impacts if f[2] > 0], key=lambda x: x[2], reverse=True)
+                pulling_features = sorted([f for f in impacts if f[2] < 0], key=lambda x: x[2])
+
+                st.markdown("This prediction is based on the following key factors:")
+
+                if prediction == "Churn":
+                    st.write("#### Top factors pushing towards **Churn** (positive impact):")
+                    for feature, value, impact in pushing_features[:3]:
+                        st.markdown(f"- **{feature}** (Value: `{value}`)")
+                else:
+                    st.write("#### Top factors pushing towards **No Churn** (negative impact):")
+                    for feature, value, impact in pulling_features[:3]:
+                        st.markdown(f"- **{feature}** (Value: `{value}`)")
 
             except Exception as e:
-                st.error(f"Could not render explanation plot: {e}")
-            # --- END OF SHAP SECTION ---
+                st.error(f"Could not render text explanation: {e}")
+            # --- END OF TEXT-BASED SHAP SECTION ---

@@ -4,8 +4,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import uvicorn
 from typing import Optional
-import json  # Import json
-import shap  # Import shap
+import json
+import shap
 
 # Create a FastAPI app instance
 app = FastAPI(title="Customer Churn Prediction API")
@@ -13,26 +13,15 @@ app = FastAPI(title="Customer Churn Prediction API")
 # --- 1. Load all model assets on startup ---
 try:
     model = joblib.load("models/random_forest_model.pkl")
-    
-    # Load the column list saved during training
     with open("models/model_columns.json", 'r') as f:
         model_columns = json.load(f)
-    
-    # Create the SHAP explainer
     explainer = shap.TreeExplainer(model)
-    
     print("Model, columns, and SHAP explainer loaded successfully.")
-except FileNotFoundError:
-    print("Error: Model assets (model.pkl or model_columns.json) not found. Please run 'dvc repro' first.")
-    model = None
-    model_columns = None
-    explainer = None
 except Exception as e:
     print(f"Error loading model assets: {e}")
     model = None
     model_columns = None
     explainer = None
-
 
 # --- 2. Define the input data model (Pydantic model) ---
 class CustomerData(BaseModel):
@@ -71,10 +60,6 @@ class CustomerData(BaseModel):
 # --- 3. Create the prediction endpoint ---
 @app.post("/predict")
 def predict_churn(customer_data: CustomerData):
-    """
-    Receives customer data, renames columns, and returns a churn prediction
-    along with SHAP values for explainability.
-    """
     if model is None:
         return {"error": "Model not loaded. Please train the model first."}
 
@@ -104,22 +89,24 @@ def predict_churn(customer_data: CustomerData):
 
     # --- Ensure column order matches training ---
     try:
-        # Use the column list loaded on startup
         input_df_final = input_df_renamed.reindex(columns=model_columns, fill_value=0)
     except Exception as e:
-        return {"error": f"Error reordering columns: {e}. Expected columns: {model_columns}, Got columns: {input_df_renamed.columns.tolist()}"}
+        return {"error": f"Error reordering columns: {e}."}
 
     # --- Make prediction and get explanation ---
     try:
         prediction = model.predict(input_df_final)[0]
         probability = model.predict_proba(input_df_final)[0][1]
         
-        # Calculate SHAP values for this one prediction
-        shap_values_obj = explainer.shap_values(input_df_final)
+        # --- V V V V V THE FIX V V V V V ---
+        # Use the modern explainer(X) syntax
+        explanation = explainer(input_df_final)
         
-        # Get values for class 1 (Churn)
-        shap_values = shap_values_obj[1][0]
-        base_value = explainer.expected_value[1]
+        # Slice the Explanation object to get values for class 1 (Churn)
+        # syntax: [sample_index, feature_index, class_index]
+        shap_values = explanation[0, :, 1].values
+        base_value = explanation[0, :, 1].base_values
+        # --- ^ ^ ^ ^ ^ THE FIX ^ ^ ^ ^ ^ ---
 
     except Exception as e:
         return {"error": f"Prediction or SHAP error: {e}. Input columns: {input_df_final.columns.tolist()}"}
@@ -129,14 +116,16 @@ def predict_churn(customer_data: CustomerData):
         "prediction": "Churn" if prediction == 1 else "No Churn",
         "churn_probability": f"{probability:.2%}",
         "shap_base_value": base_value,
-        "shap_values": shap_values.tolist(), # Convert numpy array to list
-        "feature_names": model_columns, # Send feature names
-        "feature_values": input_df_final.iloc[0].tolist() # Send feature values
+        "shap_values": shap_values.tolist(), 
+        "feature_names": model_columns,
+        "feature_values": input_df_final.iloc[0].tolist()
     }
 
+# --- 4. Add a root endpoint ---
 @app.get("/")
 def read_root():
     return {"status": "ok", "message": "Churn Prediction API is running."}
 
+# --- 5. Add a main block ---
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)
