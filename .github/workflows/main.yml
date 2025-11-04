@@ -28,7 +28,6 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          # Uses your AWS_ROLE_TO_ASSUME secret
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }} 
           aws-region: ${{ secrets.AWS_REGION }}
 
@@ -53,7 +52,7 @@ jobs:
         # We use the '>=' logic to allow rollbacks
         run: python compare_metrics.py metrics.json reports/production_metrics.json
 
-      # Build and Deploy step using your specific secret names
+      # Build and Deploy step using your specific repo name
       - name: Build, Push, and Deploy New Model
         if: steps.compare.outcome == 'success'
         run: |
@@ -63,11 +62,11 @@ jobs:
           docker build -t churn-api .
           
           # 2. Tag the image for ECR
-          # Using your ECR_REGISTRY_URL and ECR_REPOSITORY secrets
-          docker tag churn-api:latest ${{ secrets.ECR_REGISTRY_URL }}/${{ secrets.ECR_REPOSITORY }}:latest
+          # Using your ECR_REGISTRY_URL secret and the hardcoded repo name
+          docker tag churn-api:latest ${{ secrets.ECR_REGISTRY_URL }}/customer_churn_prediction:latest
           
           # 3. Push the image to ECR
-          docker push ${{ secrets.ECR_REGISTRY_URL }}/${{ secrets.ECR_REPOSITORY }}:latest
+          docker push ${{ secrets.ECR_REGISTRY_URL }}/customer_churn_prediction:latest
           
           # 4. Push the new model to S3
           dvc push
@@ -86,17 +85,17 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
           chmod 600 private_key.pem
           
-          ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ secrets.EC2_HOST_IP }} '
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ secrets.ECR_HOST_IP }} '
             # Log in to ECR on the EC2 instance
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY_URL }}
             
             # Stop and remove the old container
-            docker stop $(docker ps -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}/${{ secrets.ECR_REPOSITORY }}) || true
-            docker rm $(docker ps -a -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}/${{ secrets.ECR_REPOSITORY }}) || true
+            docker stop $(docker ps -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}/customer_churn_prediction) || true
+            docker rm $(docker ps -a -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}/customer_churn_prediction) || true
             
             # Pull the new image from ECR and run it
-            docker pull ${{ secrets.ECR_REGISTRY_URL }}/${{ secrets.ECR_REPOSITORY }}:latest
-            docker run -d -p 80:80 ${{ secrets.ECR_REGISTRY_URL }}/${{ secrets.ECR_REPOSITORY }}:latest
+            docker pull ${{ secrets.ECR_REGISTRY_URL }}/customer_churn_prediction:latest
+            docker run -d -p 80:80 ${{ secrets.ECR_REGISTRY_URL }}/customer_churn_prediction:latest
           '
 
       - name: Handle Worse Model
