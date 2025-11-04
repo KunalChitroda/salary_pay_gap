@@ -2,6 +2,11 @@ name: MLOps CI/CD Pipeline
 
 on: [push]
 
+# Permissions for AWS OIDC (password-less login)
+permissions:
+  id-token: write  # Required for assuming AWS role
+  contents: write  # Required for pushing changes to the repo
+
 jobs:
   run-pipeline-and-deploy:
     runs-on: ubuntu-latest
@@ -19,13 +24,19 @@ jobs:
           pip install -r requirements.txt
           pip install "dvc[s3]"
 
+      # Use your specific role and region secrets
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1 # Change to your bucket's region
+          role-to-assume: ${{ secrets.WS_ROLE_TO_ASSUME }} 
+          aws-region: ${{ secrets.AWS_REGION }}
 
+      # Log in to ECR (no changes here)
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        id: login-ecr
+
+      # DVC steps remain the same
       - name: Pull DVC Data
         run: dvc pull
 
@@ -35,30 +46,26 @@ jobs:
       - name: Show New Metrics
         run: dvc metrics show
 
-      # --- NEW STEP: Compare metrics ---
       - name: Compare New Metrics to Production
         id: compare
-        # This step will "fail" (exit 1) if the model isn't better
-        # We add 'continue-on-error: true' to let the job continue
         continue-on-error: true
         run: python compare_metrics.py metrics.json reports/production_metrics.json
 
-      # --- NEW STEP: Build and Deploy IF Better ---
+      # Build and Deploy step using your specific secret names
       - name: Build, Push, and Deploy New Model
-        # This step ONLY runs if the "compare" step was successful (exit 0)
         if: steps.compare.outcome == 'success'
         run: |
-          echo "✅ New model is better. Proceeding with deployment."
+          echo "✅ New model is better. Proceeding with deployment to ECR."
           
-          # 1. Build the Docker image (includes the new model)
+          # 1. Build the Docker image
           docker build -t churn-api .
           
-          # 2. Log in to Docker Hub
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          # 2. Tag the image for ECR
+          # Using your ECR_REGISTRY_URL and ECR_REPOSITORY secrets
+          docker tag churn-api:latest ${{ secrets.ECR_REGISTRY_URL }}/${{ secrets.ECR_REPOSITORY }}:latest
           
-          # 3. Tag and Push the image
-          docker tag churn-api ${{ secrets.DOCKER_USERNAME }}/churn-api
-          docker push ${{ secrets.DOCKER_USERNAME }}/churn-api
+          # 3. Push the image to ECR
+          docker push ${{ secrets.ECR_REGISTRY_URL }}/${{ secrets.ECR_REPOSITORY }}:latest
           
           # 4. Push the new model to S3
           dvc push
@@ -71,25 +78,25 @@ jobs:
           git commit -m "Promote new model to production"
           git push
           
-          # 6. SSH into EC2 and redeploy
+          # 6. SSH into EC2 and redeploy (pulling from ECR)
           echo "Deploying to EC2..."
-          # Create a key file from the SSH_PRIVATE_KEY secret
           echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
           chmod 600 private_key.pem
           
           ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ secrets.EC2_HOST_IP }} '
-            # Stop and remove the old container
-            docker stop $(docker ps -q --filter ancestor=${{ secrets.DOCKER_USERNAME }}/churn-api) || true
-            docker rm $(docker ps -a -q --filter ancestor=${{ secrets.DOCKER_USERNAME }}/churn-api) || true
+            # Log in to ECR on the EC2 instance
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY_URL }}
             
-            # Pull the new image and run it
-            docker pull ${{ secrets.DOCKER_USERNAME }}/churn-api
-            docker run -d -p 80:80 ${{ secrets.DOCKER_USERNAME }}/churn-api
+            # Stop and remove the old container
+            docker stop $(docker ps -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}/${{ secrets.ECR_REPOSITORY }}) || true
+            docker rm $(docker ps -a -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}/${{ secrets.ECR_REPOSITORY }}) || true
+            
+            # Pull the new image from ECR and run it
+            docker pull ${{ secrets.ECR_REGISTRY_URL }}/${{ secrets.ECR_REPOSITORY }}:latest
+            docker run -d -p 80:80 ${{ secrets.ECR_REGISTRY_URL }}/${{ secrets.ECR_REPOSITORY }}:latest
           '
 
-      # --- NEW STEP: Handle a worse model ---
       - name: Handle Worse Model
-        # This step ONLY runs if the "compare" step failed (exit 1)
         if: steps.compare.outcome != 'success'
         run: |
           echo "❌ New model is not better. Skipping deployment."
