@@ -6,8 +6,6 @@ import sys
 import yaml
 import json
 import mlflow
-import shap
-import matplotlib.pyplot as plt
 
 # --- Configuration ---
 PROCESSED_DATA_FOLDER = 'data/processed'
@@ -15,14 +13,13 @@ MODEL_FOLDER = 'models'
 MODEL_NAME = 'random_forest_model.pkl'
 METRICS_FILE = 'metrics.json'
 
-# --- THIS IS THE NEW LINE ---
 # Force MLflow to use a local, relative path for its tracking database
 mlflow.set_tracking_uri("./mlruns")
 
 def evaluate_model(params_path):
     """
-    Evaluates the classification model, logs parameters, metrics,
-    and a SHAP summary plot to MLflow.
+    Evaluates the classification model and logs parameters and metrics to MLflow.
+    (SHAP plot generation has been removed to fix CI/CD error).
     """
     print("Starting model evaluation for Customer Churn...")
 
@@ -69,27 +66,8 @@ def evaluate_model(params_path):
             }, f, indent=4)
         print(f"Metrics saved to '{METRICS_FILE}' for DVC.")
 
-        # --- SHAP SECTION ---
-        print("Calculating SHAP summary plot...")
-        if len(X_test) > 100:
-            X_test_sample = X_test.sample(100, random_state=42)
-        else:
-            X_test_sample = X_test
-        
-        explainer = shap.TreeExplainer(model)
-        explanation = explainer(X_test_sample)
-        
-        shap.summary_plot(explanation[:, :, 1], X_test_sample, show=False)
-        
-        plot_path = "shap_summary_plot.png"
-        plt.savefig(plot_path, bbox_inches='tight') 
-        plt.close() 
-        
-        # Log the plot as an artifact in MLflow
-        mlflow.log_artifact(plot_path, artifact_path="plots")
-        
-        print(f"SHAP summary plot saved and logged to MLflow as '{plot_path}'.")
-        # --- END OF SHAP SECTION ---
+        # --- SHAP SECTION REMOVED ---
+        print("SHAP plot generation skipped to avoid CI/CD error.")
 
 if __name__ == '__main__':
     evaluate_model(params_path='params.yaml')
