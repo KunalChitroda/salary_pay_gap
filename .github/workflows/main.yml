@@ -31,12 +31,12 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }} 
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Log in to ECR (no changes here)
+      # Log in to ECR
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
         id: login-ecr
 
-      # DVC steps remain the same
+      # DVC steps
       - name: Pull DVC Data
         run: dvc pull
 
@@ -49,55 +49,49 @@ jobs:
       - name: Compare New Metrics to Production
         id: compare
         continue-on-error: true
-        # We use the '>=' logic to allow rollbacks
         run: python compare_metrics.py metrics.json reports/production_metrics.json
 
-      # Build and Deploy step using your specific repo name
+      # Build and Deploy step
       - name: Build, Push, and Deploy New Model
         if: steps.compare.outcome == 'success'
         run: |
           echo "✅ New model is better or equal. Proceeding with deployment to ECR."
           
-          # 1. Build the Docker image
+          # 1. Build and push Docker image
           docker build -t churn-api .
-          
-          # 2. Tag the image for ECR
-          # --- THIS LINE IS FIXED ---
           docker tag churn-api:latest ${{ secrets.ECR_REGISTRY_URL }}:latest
-          
-          # 3. Push the image to ECR
-          # --- THIS LINE IS FIXED ---
           docker push ${{ secrets.ECR_REGISTRY_URL }}:latest
           
-          # 4. Push the new model to S3
+          # 2. Push DVC artifacts
           dvc push
           
-          # 5. Update the production_metrics.json in Git
+          # 3. Update and Push Git changes (with safety check)
           cp metrics.json reports/production_metrics.json
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           git add reports/production_metrics.json dvc.lock
-          git commit -m "Promote new model to production"
-          git pull --rebase origin main
-          git push
           
-          # 6. SSH into EC2 and redeploy (pulling from ECR)
+          # --- THIS IS THE FIX ---
+          # Check if there are any changes to commit before committing
+          if ! git diff-index --quiet HEAD; then
+            echo "Changes found (new model promoted). Committing and pushing..."
+            git commit -m "Promote new model to production"
+            git pull --rebase origin main
+            git push
+          else
+            echo "No new model changes to commit. Working tree is clean."
+          fi
+          # --- END OF FIX ---
+          
+          # 4. SSH into EC2 and redeploy
           echo "Deploying to EC2..."
-          # Uses your EC2_SSH_KEY and EC2_HOST_IP secrets
           echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
           chmod 600 private_key.pem
           
           ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ secrets.EC2_HOST_IP }} '
-            # Log in to ECR on the EC2 instance
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY_URL }}
-            
-            # Stop and remove the old container
-            # --- THIS LINE IS FIXED ---
             docker stop $(docker ps -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}) || true
             docker rm $(docker ps -a -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}) || true
-            
-            # Pull the new image from ECR and run it
-            # --- THIS LINE IS FIXED ---
             docker pull ${{ secrets.ECR_REGISTRY_URL }}:latest
             docker run -d -p 80:80 ${{ secrets.ECR_REGISTRY_URL }}:latest
           '
