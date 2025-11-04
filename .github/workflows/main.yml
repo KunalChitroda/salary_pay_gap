@@ -41,7 +41,7 @@ jobs:
         run: dvc pull
 
       - name: Run DVC Pipeline
-        run: dve repro
+        run: dvc repro
 
       - name: Show New Metrics
         run: dvc metrics show
