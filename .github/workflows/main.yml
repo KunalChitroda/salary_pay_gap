@@ -5,7 +5,7 @@ on: [push]
 # Permissions for AWS OIDC (password-less login)
 permissions:
   id-token: write  # Required for assuming AWS role
-  contents: write  # Required for pushing changes to the repo
+  contents: write  # Required for git push
 
 jobs:
   run-pipeline-and-deploy:
@@ -28,6 +28,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
+          # Uses your AWS_ROLE_TO_ASSUME secret
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }} 
           aws-region: ${{ secrets.AWS_REGION }}
 
@@ -49,13 +50,14 @@ jobs:
       - name: Compare New Metrics to Production
         id: compare
         continue-on-error: true
+        # We use the '>=' logic to allow rollbacks
         run: python compare_metrics.py metrics.json reports/production_metrics.json
 
       # Build and Deploy step using your specific secret names
       - name: Build, Push, and Deploy New Model
         if: steps.compare.outcome == 'success'
         run: |
-          echo "✅ New model is better. Proceeding with deployment to ECR."
+          echo "✅ New model is better or equal. Proceeding with deployment to ECR."
           
           # 1. Build the Docker image
           docker build -t churn-api .
@@ -80,6 +82,7 @@ jobs:
           
           # 6. SSH into EC2 and redeploy (pulling from ECR)
           echo "Deploying to EC2..."
+          # Uses your EC2_SSH_KEY and EC2_HOST_IP secrets
           echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
           chmod 600 private_key.pem
           
