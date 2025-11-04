@@ -41,7 +41,7 @@ jobs:
         run: dvc pull
 
       - name: Run DVC Pipeline
-        run: dvc repro
+        run: dve repro
 
       - name: Show New Metrics
         run: dvc metrics show
@@ -65,14 +65,12 @@ jobs:
           # 2. Push DVC artifacts
           dvc push
           
-          # 3. Update and Push Git changes (with safety check)
+          # 3. Update and Push Git changes
           cp metrics.json reports/production_metrics.json
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           git add reports/production_metrics.json dvc.lock
           
-          # --- THIS IS THE FIX ---
-          # Check if there are any changes to commit before committing
           if ! git diff-index --quiet HEAD; then
             echo "Changes found (new model promoted). Committing and pushing..."
             git commit -m "Promote new model to production"
@@ -81,22 +79,35 @@ jobs:
           else
             echo "No new model changes to commit. Working tree is clean."
           fi
-          # --- END OF FIX ---
           
           # 4. SSH into EC2 and redeploy
           echo "Deploying to EC2..."
           echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
           chmod 600 private_key.pem
           
+          # --- THIS IS THE CORRECTED COMMAND ---
+          # We wrap the entire remote script in 'bash -l -c "..."'
+          # This forces a login shell (-l) which loads the full $PATH
           ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ secrets.EC2_HOST_IP }} '
-            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY_URL }}
-            docker stop $(docker ps -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}) || true
-            docker rm $(docker ps -a -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}) || true
-            docker pull ${{ secrets.ECR_REGISTRY_URL }}:latest
-            docker run -d -p 80:80 ${{ secrets.ECR_REGISTRY_URL }}:latest
+            bash -l -c "
+              echo \"Logging into ECR...\"
+              aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY_URL }}
+              
+              echo \"Stopping old container...\"
+              docker stop $(docker ps -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}) || true
+              
+              echo \"Removing old container...\"
+              docker rm $(docker ps -a -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}) || true
+              
+              echo \"Pulling new image...\"
+              docker pull ${{ secrets.ECR_REGISTRY_URL }}:latest
+              
+              echo \"Running new container...\"
+              docker run -d -p 80:80 ${{ secrets.ECR_REGISTRY_URL }}:latest
+            "
           '
 
       - name: Handle Worse Model
         if: steps.compare.outcome != 'success'
         run: |
-          echo "New model is not better. Skipping deployment."
+          echo "❌ New model is not better. Skipping deployment."
