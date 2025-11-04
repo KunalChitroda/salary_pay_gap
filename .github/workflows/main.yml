@@ -85,25 +85,24 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
           chmod 600 private_key.pem
           
-          # --- THIS IS THE CORRECTED COMMAND ---
-          # We wrap the entire remote script in 'bash -l -c "..."'
-          # This forces a login shell (-l) which loads the full $PATH
+          # --- THIS IS THE CORRECTED SSH COMMAND ---
+          # We now use the full paths: /usr/bin/aws and /usr/bin/docker
           ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ secrets.EC2_HOST_IP }} '
             bash -l -c "
               echo \"Logging into ECR...\"
-              aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY_URL }}
+              /usr/bin/aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | /usr/bin/docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY_URL }}
               
               echo \"Stopping old container...\"
-              docker stop $(docker ps -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}) || true
+              /usr/bin/docker stop $(/usr/bin/docker ps -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}) || true
               
               echo \"Removing old container...\"
-              docker rm $(docker ps -a -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}) || true
+              /usr/bin/docker rm $(/usr/bin/docker ps -a -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}) || true
               
               echo \"Pulling new image...\"
-              docker pull ${{ secrets.ECR_REGISTRY_URL }}:latest
+              /usr/bin/docker pull ${{ secrets.ECR_REGISTRY_URL }}:latest
               
               echo \"Running new container...\"
-              docker run -d -p 80:80 ${{ secrets.ECR_REGISTRY_URL }}:latest
+              /usr/bin/docker run -d -p 80:80 ${{ secrets.ECR_REGISTRY_URL }}:latest
             "
           '
 
