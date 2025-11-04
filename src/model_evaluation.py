@@ -72,22 +72,18 @@ def evaluate_model(params_path):
         else:
             X_test_sample = X_test
         
-        # Create the explainer
         explainer = shap.TreeExplainer(model)
-        
-        # Create the new, robust Explanation object
         explanation = explainer(X_test_sample)
         
-        # Create and save the summary plot
-        # We slice the Explanation object: [:, :, 1] means (all_samples, all_features, class_1)
         shap.summary_plot(explanation[:, :, 1], X_test_sample, show=False)
         
         plot_path = "shap_summary_plot.png"
-        plt.savefig(plot_path, bbox_inches='tight') # Save the plot
-        plt.close() # Close the plot to free up memory
+        plt.savefig(plot_path, bbox_inches='tight') 
+        plt.close() 
         
-        # Log the plot as an artifact in MLflow
-        mlflow.log_artifact(plot_path)
+        # --- THIS IS THE CORRECTED LINE ---
+        mlflow.log_artifact(plot_path, artifact_path="plots")
+        
         print(f"SHAP summary plot saved and logged to MLflow as '{plot_path}'.")
         # --- END OF UPDATED SHAP SECTION ---
 
