@@ -62,11 +62,12 @@ jobs:
           docker build -t churn-api .
           
           # 2. Tag the image for ECR
-          # Using your ECR_REGISTRY_URL secret and the hardcoded repo name
-          docker tag churn-api:latest ${{ secrets.ECR_REGISTRY_URL }}/customer_churn_prediction:latest
+          # --- THIS LINE IS FIXED ---
+          docker tag churn-api:latest ${{ secrets.ECR_REGISTRY_URL }}:latest
           
           # 3. Push the image to ECR
-          docker push ${{ secrets.ECR_REGISTRY_URL }}/customer_churn_prediction:latest
+          # --- THIS LINE IS FIXED ---
+          docker push ${{ secrets.ECR_REGISTRY_URL }}:latest
           
           # 4. Push the new model to S3
           dvc push
@@ -85,17 +86,19 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
           chmod 600 private_key.pem
           
-          ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ secrets.ECR_HOST_IP }} '
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ secrets.EC2_HOST_IP }} '
             # Log in to ECR on the EC2 instance
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY_URL }}
             
             # Stop and remove the old container
-            docker stop $(docker ps -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}/customer_churn_prediction) || true
-            docker rm $(docker ps -a -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}/customer_churn_prediction) || true
+            # --- THIS LINE IS FIXED ---
+            docker stop $(docker ps -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}) || true
+            docker rm $(docker ps -a -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}) || true
             
             # Pull the new image from ECR and run it
-            docker pull ${{ secrets.ECR_REGISTRY_URL }}/customer_churn_prediction:latest
-            docker run -d -p 80:80 ${{ secrets.ECR_REGISTRY_URL }}/customer_churn_prediction:latest
+            # --- THIS LINE IS FIXED ---
+            docker pull ${{ secrets.ECR_REGISTRY_URL }}:latest
+            docker run -d -p 80:80 ${{ secrets.ECR_REGISTRY_URL }}:latest
           '
 
       - name: Handle Worse Model
