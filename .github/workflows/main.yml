@@ -84,21 +84,24 @@ jobs:
           echo "Deploying to EC2..."
           echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
           chmod 600 private_key.pem
-
+          
+          # --- THIS IS THE CORRECTED SSH COMMAND ---
+          # We use a "here string" (<<<) to feed the password to docker login
+          # This avoids the pipe (|) syntax error
           ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ secrets.EC2_HOST_IP }} '
             bash -l -c "
               echo \"Logging into ECR...\"
-              /usr/bin/aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | /usr/bin/docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY_URL }}
-
+              /usr/bin/docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY_URL }} <<< $(/usr/bin/aws ecr get-login-password --region ${{ secrets.AWS_REGION }})
+              
               echo \"Stopping old container...\"
               /usr/bin/docker stop $(/usr/bin/docker ps -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}) || true
-
+              
               echo \"Removing old container...\"
               /usr/bin/docker rm $(/usr/bin/docker ps -a -q --filter ancestor=${{ secrets.ECR_REGISTRY_URL }}) || true
-
+              
               echo \"Pulling new image...\"
               /usr/bin/docker pull ${{ secrets.ECR_REGISTRY_URL }}:latest
-
+              
               echo \"Running new container...\"
               /usr/bin/docker run -d -p 80:80 ${{ secrets.ECR_REGISTRY_URL }}:latest
             "
