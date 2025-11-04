@@ -1,16 +1,9 @@
-name: MLOps CI/CD Pipeline with DVC and S3
+name: MLOps CI/CD Pipeline
 
-on:
-  push:
-    branches:
-      - main
-
-permissions:
-  contents: read
-  id-token: write
+on: [push]
 
 jobs:
-  run-pipeline:
+  run-pipeline-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -19,33 +12,84 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.9'
 
       - name: Install Dependencies
         run: |
           pip install -r requirements.txt
+          pip install "dvc[s3]"
 
       - name: Configure AWS Credentials
-        # This action securely configures the AWS credentials needed by DVC
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1 # Change this to your bucket's region
+          aws-region: us-east-1 # Change to your bucket's region
 
-      - name: Pull DVC Data and Models from S3
-        run: |
-          dvc remote add -f aws ${{ secrets.DVC_REMOTE_URL }}
-          dvc remote default aws
-          dvc pull
+      - name: Pull DVC Data
+        run: dvc pull
 
-      - name: Reproduce DVC Pipeline
+      - name: Run DVC Pipeline
         run: dvc repro
 
-      - name: Show and Log Metrics
+      - name: Show New Metrics
+        run: dvc metrics show
+
+      # --- NEW STEP: Compare metrics ---
+      - name: Compare New Metrics to Production
+        id: compare
+        # This step will "fail" (exit 1) if the model isn't better
+        # We add 'continue-on-error: true' to let the job continue
+        continue-on-error: true
+        run: python compare_metrics.py metrics.json reports/production_metrics.json
+
+      # --- NEW STEP: Build and Deploy IF Better ---
+      - name: Build, Push, and Deploy New Model
+        # This step ONLY runs if the "compare" step was successful (exit 0)
+        if: steps.compare.outcome == 'success'
         run: |
-          dvc metrics show
-          cat metrics.json
-      
-      - name: Push DVC artifacts to S3
-        run: dvc push
+          echo "✅ New model is better. Proceeding with deployment."
+          
+          # 1. Build the Docker image (includes the new model)
+          docker build -t churn-api .
+          
+          # 2. Log in to Docker Hub
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          
+          # 3. Tag and Push the image
+          docker tag churn-api ${{ secrets.DOCKER_USERNAME }}/churn-api
+          docker push ${{ secrets.DOCKER_USERNAME }}/churn-api
+          
+          # 4. Push the new model to S3
+          dvc push
+          
+          # 5. Update the production_metrics.json in Git
+          cp metrics.json reports/production_metrics.json
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add reports/production_metrics.json dvc.lock
+          git commit -m "Promote new model to production"
+          git push
+          
+          # 6. SSH into EC2 and redeploy
+          echo "Deploying to EC2..."
+          # Create a key file from the SSH_PRIVATE_KEY secret
+          echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+          
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ secrets.EC2_HOST_IP }} '
+            # Stop and remove the old container
+            docker stop $(docker ps -q --filter ancestor=${{ secrets.DOCKER_USERNAME }}/churn-api) || true
+            docker rm $(docker ps -a -q --filter ancestor=${{ secrets.DOCKER_USERNAME }}/churn-api) || true
+            
+            # Pull the new image and run it
+            docker pull ${{ secrets.DOCKER_USERNAME }}/churn-api
+            docker run -d -p 80:80 ${{ secrets.DOCKER_USERNAME }}/churn-api
+          '
+
+      # --- NEW STEP: Handle a worse model ---
+      - name: Handle Worse Model
+        # This step ONLY runs if the "compare" step failed (exit 1)
+        if: steps.compare.outcome != 'success'
+        run: |
+          echo "❌ New model is not better. Skipping deployment."
