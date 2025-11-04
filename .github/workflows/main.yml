@@ -99,4 +99,4 @@ jobs:
       - name: Handle Worse Model
         if: steps.compare.outcome != 'success'
         run: |
-          echo "❌ New model is not better. Skipping deployment."
+          echo "New model is not better. Skipping deployment."
